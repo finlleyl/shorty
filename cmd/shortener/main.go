@@ -4,6 +4,7 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"strconv"
 )
 
 type Storage map[string]string
@@ -50,9 +51,12 @@ func generateIDHandler(w http.ResponseWriter, r *http.Request) {
 	shortURL := "http://localhost:8080/" + id
 
 	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Content-Length", len(shortURL))
+	w.Header().Set("Content-Length", strconv.Itoa(len(shortURL)))
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(shortURL))
+	_, err = w.Write([]byte(shortURL))
+	if err != nil {
+		return
+	}
 }
 
 func handleGet(w http.ResponseWriter, r *http.Request) {
