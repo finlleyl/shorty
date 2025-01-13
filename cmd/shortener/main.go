@@ -50,8 +50,23 @@ func generateIDHandler(w http.ResponseWriter, r *http.Request) {
 	shortURL := "http://localhost:8080/" + id
 
 	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Content-Length", len(shortURL))
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(shortURL))
+}
+
+func handleGet(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Path[1:]
+
+	origURL, exists := storage.Get(id)
+
+	if !exists {
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Location", origURL)
+	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
 func main() {
@@ -61,6 +76,8 @@ func main() {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		generateIDHandler(w, r)
 	})
+
+	mux.HandleFunc("/{id}", handleGet)
 
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
