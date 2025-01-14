@@ -52,6 +52,7 @@ func TestRedirectHandler(t *testing.T) {
 			handler.ServeHTTP(recorder, request)
 
 			result := recorder.Result()
+			defer result.Body.Close()
 
 			assert.Equal(t, tt.expectedStatus, result.StatusCode)
 			if tt.expectedHeader != "" {
