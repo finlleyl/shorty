@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"github.com/finlleyl/shorty/internal/app"
+	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -45,14 +47,18 @@ func TestRedirectHandler(t *testing.T) {
 			if tt.requestPath == "" {
 				tt.requestPath = "/" + id
 			}
+			r := chi.NewRouter()
+			r.Get("/{id}", RedirectHandler(storage))
+
 			request := httptest.NewRequest(http.MethodGet, tt.requestPath, nil)
 			recorder := httptest.NewRecorder()
 
-			handler := RedirectHandler(storage)
-			handler.ServeHTTP(recorder, request)
+			r.ServeHTTP(recorder, request)
 
 			result := recorder.Result()
-			defer result.Body.Close()
+			defer func(Body io.ReadCloser) {
+				_ = Body.Close()
+			}(result.Body)
 
 			assert.Equal(t, tt.expectedStatus, result.StatusCode)
 			if tt.expectedHeader != "" {

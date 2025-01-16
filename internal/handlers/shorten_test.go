@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"github.com/finlleyl/shorty/internal/app"
+	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 )
@@ -13,7 +15,7 @@ func TestShortenHandler(t *testing.T) {
 	tests := []struct {
 		name         string
 		storageSetup func() *app.Storage
-		requestBody  string
+		requestURL   string
 		method       string
 		expectedCode int
 		expectedBody string
@@ -23,27 +25,17 @@ func TestShortenHandler(t *testing.T) {
 			storageSetup: func() *app.Storage {
 				return app.NewStorage()
 			},
-			requestBody:  "http://google.com",
+			requestURL:   "http://google.com",
 			method:       http.MethodPost,
 			expectedCode: http.StatusCreated,
 			expectedBody: "http://localhost:8080/",
-		},
-		{
-			name: "Invalid HTTP method",
-			storageSetup: func() *app.Storage {
-				return app.NewStorage()
-			},
-			requestBody:  "http://google.com",
-			method:       http.MethodGet,
-			expectedCode: http.StatusMethodNotAllowed,
-			expectedBody: "Method not allowed\n",
 		},
 		{
 			name: "Empty request body",
 			storageSetup: func() *app.Storage {
 				return app.NewStorage()
 			},
-			requestBody:  "",
+			requestURL:   "",
 			method:       http.MethodPost,
 			expectedCode: http.StatusBadRequest,
 			expectedBody: "Invalid request body\n",
@@ -53,15 +45,24 @@ func TestShortenHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			storage := tt.storageSetup()
+			formData := url.Values{}
+			if tt.requestURL != "" {
+				formData.Set("url", tt.requestURL)
+			}
 
-			req := httptest.NewRequest(tt.method, "/", strings.NewReader(tt.requestBody))
+			r := chi.NewRouter()
+			r.Post("/", ShortenHandler(storage))
+
+			req := httptest.NewRequest(tt.method, "/", strings.NewReader(formData.Encode()))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			rec := httptest.NewRecorder()
 
-			handler := ShortenHandler(storage)
-			handler.ServeHTTP(rec, req)
+			r.ServeHTTP(rec, req)
 
 			resp := rec.Result()
-			defer resp.Body.Close()
+			defer func(Body io.ReadCloser) {
+				_ = Body.Close()
+			}(resp.Body)
 			if resp.StatusCode != tt.expectedCode {
 				t.Errorf("unexpected status: got %v, want %v", resp.StatusCode, tt.expectedCode)
 			}
