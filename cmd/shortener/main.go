@@ -13,10 +13,8 @@ func main() {
 
 	r := chi.NewRouter()
 
-	r.Route("", func(r chi.Router) {
-		r.Post("/", handlers.ShortenHandler(storage))
-		r.Get("/{id}", handlers.RedirectHandler(storage))
-	})
+	r.Post("/", handlers.ShortenHandler(storage))
+	r.Get("/{id}", handlers.RedirectHandler(storage))
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
