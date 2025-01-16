@@ -4,7 +4,6 @@ import (
 	"github.com/finlleyl/shorty/internal/app"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -56,12 +55,7 @@ func TestRedirectHandler(t *testing.T) {
 			r.ServeHTTP(recorder, request)
 
 			result := recorder.Result()
-			defer func(Body io.ReadCloser) {
-				err := Body.Close()
-				if err != nil {
-					return
-				}
-			}(result.Body)
+			defer result.Body.Close()
 
 			assert.Equal(t, tt.expectedStatus, result.StatusCode)
 			if tt.expectedHeader != "" {
