@@ -61,7 +61,10 @@ func TestShortenHandler(t *testing.T) {
 
 			resp := rec.Result()
 			defer func(Body io.ReadCloser) {
-				_ = Body.Close()
+				err := Body.Close()
+				if err != nil {
+					return
+				}
 			}(resp.Body)
 			if resp.StatusCode != tt.expectedCode {
 				t.Errorf("unexpected status: got %v, want %v", resp.StatusCode, tt.expectedCode)

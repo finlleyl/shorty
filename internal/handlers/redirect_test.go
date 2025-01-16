@@ -57,7 +57,10 @@ func TestRedirectHandler(t *testing.T) {
 
 			result := recorder.Result()
 			defer func(Body io.ReadCloser) {
-				_ = Body.Close()
+				err := Body.Close()
+				if err != nil {
+					return
+				}
 			}(result.Body)
 
 			assert.Equal(t, tt.expectedStatus, result.StatusCode)
