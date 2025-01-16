@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/finlleyl/shorty/internal/app"
 	"github.com/finlleyl/shorty/internal/handlers"
+	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
 )
@@ -10,10 +11,10 @@ import (
 func main() {
 	storage := app.NewStorage()
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", handlers.ShortenHandler(storage))
-	mux.HandleFunc("/{id}", handlers.RedirectHandler(storage))
+	r := chi.NewRouter()
 
-	log.Println("Server is running on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	r.Post("/", handlers.ShortenHandler(storage))
+	r.Get("/{id}", handlers.RedirectHandler(storage))
+
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
