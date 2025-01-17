@@ -35,7 +35,11 @@ func (c *Config) Set(flagValue string) error {
 }
 
 func ParseFlags() *Config {
-	config := new(Config)
+	config := &Config{
+		Host:    "localhost",
+		Port:    8080,
+		Address: "localhost:8080",
+	}
 	flag.Var(config, "a", "host:port")
 	flag.StringVar(&config.BaseURL, "b", "", "base url")
 	flag.Parse()
