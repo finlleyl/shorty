@@ -46,7 +46,12 @@ func TestShortenHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			storage := tt.storageSetup()
 
-			cfg := config.ParseFlags()
+			cfg := &config.Config{
+				BaseURL: "http://localhost:8080/",
+				Host:    "localhost",
+				Port:    8080,
+				Address: "localhost:8080",
+			}
 
 			r := chi.NewRouter()
 			r.Post("/", ShortenHandler(storage, cfg))
