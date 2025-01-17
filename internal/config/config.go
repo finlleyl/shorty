@@ -41,7 +41,7 @@ func ParseFlags() *Config {
 		Address: "localhost:8080",
 	}
 	flag.Var(config, "a", "host:port")
-	flag.StringVar(&config.BaseURL, "b", "http://localhost:8080/", "base url")
+	flag.StringVar(&config.BaseURL, "b", "http://localhost:8080", "base url")
 	flag.Parse()
 
 	return config
