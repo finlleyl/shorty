@@ -2,11 +2,12 @@ package handlers
 
 import (
 	"github.com/finlleyl/shorty/internal/app"
+	"github.com/finlleyl/shorty/internal/config"
 	"io"
 	"net/http"
 )
 
-func ShortenHandler(storage *app.Storage) http.HandlerFunc {
+func ShortenHandler(storage *app.Storage, config *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		body, err := io.ReadAll(r.Body)
@@ -22,7 +23,7 @@ func ShortenHandler(storage *app.Storage) http.HandlerFunc {
 		}
 
 		id := storage.Save(longURL)
-		shortURL := "http://localhost:8080/" + id
+		shortURL := config.BaseURL + "/" + id
 
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusCreated)

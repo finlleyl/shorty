@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/finlleyl/shorty/internal/app"
+	"github.com/finlleyl/shorty/internal/config"
 	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
@@ -45,8 +46,15 @@ func TestShortenHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			storage := tt.storageSetup()
 
+			cfg := &config.Config{
+				BaseURL: "http://localhost:8080/",
+				Host:    "localhost",
+				Port:    8080,
+				Address: "localhost:8080",
+			}
+
 			r := chi.NewRouter()
-			r.Post("/", ShortenHandler(storage))
+			r.Post("/", ShortenHandler(storage, cfg))
 
 			req := httptest.NewRequest(tt.method, "/", strings.NewReader(tt.requestURL))
 			req.Header.Set("Content-Type", "text/plain")
