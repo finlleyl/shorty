@@ -18,5 +18,5 @@ func main() {
 	r.Post("/", handlers.ShortenHandler(storage, cfg))
 	r.Get("/{id}", handlers.RedirectHandler(storage))
 
-	log.Fatal(http.ListenAndServe(cfg.Address, r))
+	log.Fatal(http.ListenAndServe(cfg.A.Address, r))
 }
