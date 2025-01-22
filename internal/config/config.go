@@ -51,15 +51,15 @@ func ParseFlags() *Config {
 		Address: "localhost:8080",
 	}
 
-	baseUrlCfg := &BaseURLConfig{}
+	baseURlCfg := &BaseURLConfig{}
 
 	flag.Var(addressCfg, "a", "host:port (default: localhost:8080)")
-	flag.StringVar(&baseUrlCfg.BaseURL, "b", "http://localhost:8080", "base URL")
+	flag.StringVar(&baseURlCfg.BaseURL, "b", "http://localhost:8080", "base URL")
 	flag.Parse()
 
 	config := &Config{
 		A: *addressCfg,
-		B: *baseUrlCfg,
+		B: *baseURlCfg,
 	}
 
 	if address, exists := os.LookupEnv("SERVER_ADDRESS"); exists {
@@ -68,8 +68,8 @@ func ParseFlags() *Config {
 		}
 	}
 
-	if baseUrl, exists := os.LookupEnv("BASE_URL"); exists {
-		config.B.BaseURL = baseUrl
+	if baseURL, exists := os.LookupEnv("BASE_URL"); exists {
+		config.B.BaseURL = baseURL
 	}
 
 	return config
