@@ -1,27 +1,37 @@
 package config
 
 import (
-	"errors"
 	"flag"
+	"fmt"
+	"log"
+	"os"
 	"strconv"
 	"strings"
 )
 
-type Config struct {
+type AddressConfig struct {
 	Host    string
 	Port    int
 	Address string
+}
+
+type BaseURLConfig struct {
 	BaseURL string
 }
 
-func (c *Config) String() string {
-	return c.Host + ":" + strconv.Itoa(c.Port)
+type Config struct {
+	A AddressConfig
+	B BaseURLConfig
 }
 
-func (c *Config) Set(flagValue string) error {
+func (c *AddressConfig) String() string {
+	return fmt.Sprintf("%s:%d", c.Host, c.Port)
+}
+
+func (c *AddressConfig) Set(flagValue string) error {
 	hp := strings.Split(flagValue, ":")
 	if len(hp) != 2 {
-		return errors.New("invalid flag value")
+		return fmt.Errorf("invalid flag value")
 	}
 	port, err := strconv.Atoi(hp[1])
 	if err != nil {
@@ -35,14 +45,32 @@ func (c *Config) Set(flagValue string) error {
 }
 
 func ParseFlags() *Config {
-	config := &Config{
+	addressCfg := &AddressConfig{
 		Host:    "localhost",
 		Port:    8080,
 		Address: "localhost:8080",
 	}
-	flag.Var(config, "a", "host:port")
-	flag.StringVar(&config.BaseURL, "b", "http://localhost:8080", "base url")
+
+	baseUrlCfg := &BaseURLConfig{}
+
+	flag.Var(addressCfg, "a", "host:port (default: localhost:8080)")
+	flag.StringVar(&baseUrlCfg.BaseURL, "b", "http://localhost:8080", "base URL")
 	flag.Parse()
+
+	config := &Config{
+		A: *addressCfg,
+		B: *baseUrlCfg,
+	}
+
+	if address, exists := os.LookupEnv("SERVER_ADDRESS"); exists {
+		if err := config.A.Set(address); err != nil {
+			log.Fatalf("Invalid SERVER_ADDRESS: %v", err)
+		}
+	}
+
+	if baseUrl, exists := os.LookupEnv("BASE_URL"); exists {
+		config.B.BaseURL = baseUrl
+	}
 
 	return config
 }
