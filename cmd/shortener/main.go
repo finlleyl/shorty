@@ -4,8 +4,8 @@ import (
 	"github.com/finlleyl/shorty/internal/app"
 	"github.com/finlleyl/shorty/internal/config"
 	"github.com/finlleyl/shorty/internal/handlers"
+	"github.com/finlleyl/shorty/internal/logger"
 	"github.com/go-chi/chi/v5"
-	"log"
 	"net/http"
 )
 
@@ -13,10 +13,19 @@ func main() {
 	storage := app.NewStorage()
 	cfg := config.ParseFlags()
 
+	logInstance, err := logger.InitializeLogger()
+	if err != nil {
+		return
+	}
+	defer logInstance.Sync()
+
 	r := chi.NewRouter()
 
-	r.Post("/", handlers.ShortenHandler(storage, cfg))
-	r.Get("/{id}", handlers.RedirectHandler(storage))
+	r.Post("/", logger.WithLogging(handlers.ShortenHandler(storage, cfg)))
+	r.Get("/{id}", logger.WithLogging(handlers.RedirectHandler(storage)))
 
-	log.Fatal(http.ListenAndServe(cfg.A.Address, r))
+	logger.Sugar.Infow("Server started", "address", cfg.A.Address)
+	if err := http.ListenAndServe(cfg.A.Address, r); err != nil {
+		logger.Sugar.Fatalw("Server failed", "error", err)
+	}
 }
