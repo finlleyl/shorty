@@ -23,6 +23,7 @@ func main() {
 
 	r.Post("/", logger.WithLogging(handlers.ShortenHandler(storage, cfg)))
 	r.Get("/{id}", logger.WithLogging(handlers.RedirectHandler(storage)))
+	r.Post("/api/shorten", logger.WithLogging(handlers.JSONHandler(storage, cfg)))
 
 	logger.Sugar.Infow("Server started", "address", cfg.A.Address)
 	if err := http.ListenAndServe(cfg.A.Address, r); err != nil {
