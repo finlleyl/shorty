@@ -32,15 +32,15 @@ func main() {
 	}
 }
 
-func gzipMiddleware(next http.Handler) http.Handler {
+func gzipMiddleware(h http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
-			next.ServeHTTP(w, r)
+			h.ServeHTTP(w, r)
 			return
 		}
 		cw := newCompressWriter(w)
 		defer cw.Close()
 
-		next.ServeHTTP(cw, r)
+		h.ServeHTTP(cw, r)
 	})
 }
