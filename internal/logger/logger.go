@@ -42,8 +42,8 @@ func InitializeLogger() (*zap.Logger, error) {
 	return logger, nil
 }
 
-func WithLogging(h http.Handler) http.Handler {
-	logFn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func WithLogging(h http.HandlerFunc) http.HandlerFunc {
+	logFn := func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
 		responseData := &responseData{
@@ -68,6 +68,6 @@ func WithLogging(h http.Handler) http.Handler {
 			"size", responseData.size,
 		)
 
-	})
+	}
 	return logFn
 }
