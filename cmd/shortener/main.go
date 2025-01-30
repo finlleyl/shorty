@@ -1,6 +1,7 @@
 package main
 
 import (
+	"compress/gzip"
 	"github.com/finlleyl/shorty/internal/app"
 	"github.com/finlleyl/shorty/internal/config"
 	"github.com/finlleyl/shorty/internal/handlers"
@@ -32,46 +33,52 @@ func main() {
 	}
 }
 
-func gzipMiddleware(h http.HandlerFunc) http.HandlerFunc {
+func gzipMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// По умолчанию ответ пишем в ow = w
-		ow := w
+		// 1. Проверить, нужно ли декомпрессировать входящий запрос (Content-Encoding: gzip)
+		// 2. Проверить, нужно ли сжимать ответ (Accept-Encoding: gzip),
+		//    если нет — просто вызывать next(w, r) без обёртки.
+		// 3. Если да, обернуть в gzipResponseWriter только BODY, а заголовки
+		//    (Location и т.п.) не трогать.
 
-		// Определяем, хочет ли клиент gzip
-		acceptEncoding := r.Header.Get("Accept-Encoding")
-		supportsGzip := strings.Contains(acceptEncoding, "gzip")
+		// Пример минимальной логики:
 
-		// Если да, оборачиваем w в gzip.Writer
-		if supportsGzip {
-			w.Header().Set("Content-Encoding", "gzip")
-			w.Header().Add("Vary", "Accept-Encoding")
-
-			cw := newCompressWriter(w)
-			ow = cw
-			defer cw.Close()
-		}
-
-		// А теперь на уровне запроса (входящих данных) проверяем,
-		// не пришел ли он к нам gzipped
-		contentEncoding := r.Header.Get("Content-Encoding")
-		sendsGzip := strings.Contains(contentEncoding, "gzip")
-
-		// Если клиент отправил gzip и это данные типа JSON или HTML,
-		// мы распаковываем Body (необязательная логика, зависит от API).
-		if sendsGzip && (strings.Contains(r.Header.Get("Content-Type"), "application/json") ||
-			strings.Contains(r.Header.Get("Content-Type"), "text/html")) {
-			cr, err := newCompressReader(r.Body)
+		// Прежде: распаковать входящий request, если у него Content-Encoding: gzip
+		if strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
+			// Имеет смысл распаковывать только при Content-Type: "application/json"
+			// или "text/html", но если хотите — можно не делать такой фильтр.
+			gr, err := gzip.NewReader(r.Body)
 			if err != nil {
-				// Ошибка при создании gzip.Reader
-				w.WriteHeader(http.StatusInternalServerError)
+				http.Error(w, "Failed to create gzip reader", http.StatusInternalServerError)
 				return
 			}
-			// Переопределяем r.Body
-			r.Body = cr
-			defer cr.Close()
+			defer gr.Close()
+			r.Body = gr
 		}
 
-		// И вызываем основной хендлер
-		h.ServeHTTP(ow, r)
+		// Проверяем, поддерживает ли клиент gzip
+		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			// Если нет, просто вызываем следующий хендлер без сжатия
+			next(w, r)
+			return
+		}
+
+		// Устанавливаем заголовки, чтобы клиент понял, что дальше будет gzip
+		w.Header().Set("Content-Encoding", "gzip")
+		w.Header().Add("Vary", "Accept-Encoding")
+
+		gzWriter := gzip.NewWriter(w)
+		defer gzWriter.Close()
+
+		// Оборачиваем http.ResponseWriter в свою структуру
+		// (Она будет сжимать только тело, а сами заголовки не трогать)
+		grw := &gzipResponseWriter{
+			ResponseWriter: w,
+			gzipWriter:     gzWriter,
+			headersSent:    false,
+		}
+
+		// Вызываем основной хендлер, передавая ему «обёрнутый» writer
+		next(grw, r)
 	}
 }
