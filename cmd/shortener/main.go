@@ -22,9 +22,12 @@ func main() {
 
 	r := chi.NewRouter()
 
-	r.Post("/", gzipMiddleware(logger.WithLogging(handlers.ShortenHandler(storage, cfg))))
-	r.Get("/{id}", gzipMiddleware(logger.WithLogging(handlers.RedirectHandler(storage))))
-	r.Post("/api/shorten", gzipMiddleware(logger.WithLogging(handlers.JSONHandler(storage, cfg))))
+	r.Use(logger.WithLogging)
+	r.Use(gzipMiddleware)
+
+	r.Post("/", handlers.ShortenHandler(storage, cfg))
+	r.Get("/{id}", handlers.RedirectHandler(storage))
+	r.Post("/api/shorten", handlers.JSONHandler(storage, cfg))
 
 	logger.Sugar.Infow("Server started", "address", cfg.A.Address)
 	if err := http.ListenAndServe(cfg.A.Address, r); err != nil {
@@ -32,7 +35,7 @@ func main() {
 	}
 }
 
-func gzipMiddleware(h http.HandlerFunc) http.HandlerFunc {
+func gzipMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 			h.ServeHTTP(w, r)
