@@ -23,7 +23,7 @@ func TestShortenHandler(t *testing.T) {
 		{
 			name: "Valid POST request",
 			storageSetup: func() *app.Storage {
-				return app.NewStorage()
+				return app.NewStorage("/tmp/short-url-db.json")
 			},
 			requestURL:   "http://google.com",
 			method:       http.MethodPost,
@@ -33,7 +33,7 @@ func TestShortenHandler(t *testing.T) {
 		{
 			name: "Empty request body",
 			storageSetup: func() *app.Storage {
-				return app.NewStorage()
+				return app.NewStorage("/tmp/short-url-db.json")
 			},
 			requestURL:   "",
 			method:       http.MethodPost,

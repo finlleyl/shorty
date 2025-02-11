@@ -14,7 +14,7 @@ import (
 
 func TestJSONHandler(t *testing.T) {
 	router := chi.NewRouter()
-	storage := app.NewStorage()
+	storage := app.NewStorage("/tmp/short-url-db.json")
 	cfg := &config.Config{
 		A: config.AddressConfig{
 			Host:    "localhost",
