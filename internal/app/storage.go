@@ -67,7 +67,7 @@ func (s *Storage) Load() error {
 
 func (s *Storage) Get(id string) (string, bool) {
 	for _, v := range s.data {
-		if v.ID, _ = strconv.Atoi(id); v.ShortURL == id {
+		if _, _ = strconv.Atoi(id); v.ShortURL == id {
 			return v.OriginalURL, true
 		}
 	}
