@@ -64,9 +64,9 @@ func (s *Storage) Load() error {
 	return json.Unmarshal(data, &s.data)
 }
 
-func (s *Storage) Get(id int) (string, bool) {
+func (s *Storage) Get(id string) (string, bool) {
 	for _, v := range s.data {
-		if v.ID == id {
+		if v.ShortURL == id {
 			return v.OriginalURL, true
 		}
 	}
