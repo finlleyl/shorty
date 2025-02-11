@@ -4,17 +4,15 @@ import (
 	"encoding/json"
 	"os"
 	"strconv"
-	"sync"
 )
 
 type ShortResult struct {
 	ID          int    `json:"uuid"`
-	ShortUrl    string `json:"short_url"`
-	OriginalUrl string `json:"original_url"`
+	ShortURL    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
 }
 
 type Storage struct {
-	mu   sync.Mutex
 	data []ShortResult
 	file string
 }
@@ -25,10 +23,7 @@ func NewStorage(file string) *Storage {
 	return s
 }
 
-func (s *Storage) Save(shortUrl, originalUrl string) int {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
+func (s *Storage) Save(shortURL, originalURL string) int {
 	newID := 1
 	if len(s.data) > 0 {
 		newID = s.data[len(s.data)-1].ID + 1
@@ -36,8 +31,8 @@ func (s *Storage) Save(shortUrl, originalUrl string) int {
 
 	s.data = append(s.data, ShortResult{
 		ID:          newID,
-		ShortUrl:    shortUrl,
-		OriginalUrl: originalUrl,
+		ShortURL:    shortURL,
+		OriginalURL: originalURL,
 	})
 
 	s.Flush()
@@ -45,15 +40,10 @@ func (s *Storage) Save(shortUrl, originalUrl string) int {
 }
 
 func (s *Storage) GetAll() []ShortResult {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	return s.data
 }
 
 func (s *Storage) Flush() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	data, err := json.Marshal(s.data)
 	if err != nil {
 		return err
@@ -63,9 +53,6 @@ func (s *Storage) Flush() error {
 }
 
 func (s *Storage) Load() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	data, err := os.ReadFile(s.file)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -79,12 +66,9 @@ func (s *Storage) Load() error {
 }
 
 func (s *Storage) Get(id string) (string, bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	for _, v := range s.data {
-		if v.ID, _ = strconv.Atoi(id); v.ShortUrl == id {
-			return v.OriginalUrl, true
+		if v.ID, _ = strconv.Atoi(id); v.ShortURL == id {
+			return v.OriginalURL, true
 		}
 	}
 	return "", false
