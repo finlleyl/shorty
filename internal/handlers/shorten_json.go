@@ -17,7 +17,8 @@ func JSONHandler(storage *app.Storage, config *config.Config) http.HandlerFunc {
 			return
 		}
 
-		shortURL := storage.Save(req.URL)
+		shortURL := app.GenerateID()
+		storage.Save(shortURL, req.URL)
 		if shortURL == "" {
 			http.Error(w, "could not save URL", http.StatusInternalServerError)
 			return

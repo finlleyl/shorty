@@ -10,8 +10,8 @@ import (
 )
 
 func main() {
-	storage := app.NewStorage()
 	cfg := config.ParseFlags()
+	storage := app.NewStorage(cfg.F.Path)
 
 	logInstance, err := logger.InitializeLogger()
 	if err != nil {
