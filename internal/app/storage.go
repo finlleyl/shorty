@@ -3,7 +3,6 @@ package app
 import (
 	"encoding/json"
 	"os"
-	"strconv"
 )
 
 type ShortResult struct {
@@ -65,9 +64,9 @@ func (s *Storage) Load() error {
 	return json.Unmarshal(data, &s.data)
 }
 
-func (s *Storage) Get(id string) (string, bool) {
+func (s *Storage) Get(id int) (string, bool) {
 	for _, v := range s.data {
-		if _, _ = strconv.Atoi(id); v.ShortURL == id {
+		if v.ID == id {
 			return v.OriginalURL, true
 		}
 	}
