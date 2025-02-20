@@ -92,7 +92,7 @@ func ParseFlags() *Config {
 		config.B.BaseURL = baseURL
 	}
 
-	if database, exists := os.LookupEnv("DATABASE_DSN "); exists {
+	if database, exists := os.LookupEnv("DATABASE_DSN"); exists {
 		config.D.Address = database
 
 	}
