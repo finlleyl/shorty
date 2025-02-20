@@ -27,9 +27,9 @@ func main() {
 
 	r := chi.NewRouter()
 
-	r.Post("/", logger.WithLogging(handlers.ShortenHandler(storage, cfg)))
-	r.Get("/{id}", logger.WithLogging(handlers.RedirectHandler(storage)))
-	r.Post("/api/shorten", logger.WithLogging(handlers.JSONHandler(storage, cfg)))
+	r.Post("/", logger.WithLogging(gzipMiddleware(handlers.ShortenHandler(storage, cfg))))
+	r.Get("/{id}", logger.WithLogging(gzipMiddleware(handlers.RedirectHandler(storage))))
+	r.Post("/api/shorten", logger.WithLogging(gzipMiddleware(handlers.JSONHandler(storage, cfg))))
 	r.Get("/ping", logger.WithLogging(handlers.CheckConnectionHandler))
 
 	logger.Sugar.Infow("Server started", "address", cfg.A.Address)
