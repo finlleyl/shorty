@@ -22,8 +22,10 @@ func ShortenHandler(storage *app.Storage, config *config.Config) http.HandlerFun
 			return
 		}
 
-		id := storage.Save(longURL)
+		id := app.GenerateID()
 		shortURL := config.B.BaseURL + "/" + id
+
+		storage.Save(id, longURL)
 
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusCreated)

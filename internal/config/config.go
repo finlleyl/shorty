@@ -19,14 +19,20 @@ type BaseURLConfig struct {
 	BaseURL string
 }
 
+
 type DatabaseConfig struct {
 	Address string
+
+type FileStorageConfig struct {
+	Path string
 }
 
 type Config struct {
 	A AddressConfig
 	B BaseURLConfig
 	D DatabaseConfig
+	F FileStorageConfig
+
 }
 
 func (c *AddressConfig) String() string {
@@ -65,12 +71,16 @@ func ParseFlags() *Config {
 		"d",
 		"postgresql://postgres:finleyl@localhost:5432/postgres",
 		"database address")
+	fileStorageCfg := &FileStorageConfig{}
+
+	flag.StringVar(&fileStorageCfg.Path, "f", "/tmp/short-url-db.json", "file storage path")
 	flag.Parse()
 
 	config := &Config{
 		A: *addressCfg,
 		B: *baseURLCfg,
 		D: *databaseCfg,
+		F: *fileStorageCfg,
 	}
 
 	if address, exists := os.LookupEnv("SERVER_ADDRESS"); exists {
@@ -85,6 +95,8 @@ func ParseFlags() *Config {
 
 	if database, exists := os.LookupEnv("DATABASE_DSN "); exists {
 		config.D.Address = database
+	if fileStoragePath, exists := os.LookupEnv("FILE_STORAGE_PATH"); exists {
+		config.F.Path = fileStoragePath
 	}
 
 	return config

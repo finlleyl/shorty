@@ -2,7 +2,7 @@ package app
 
 import "math/rand"
 
-func generateID() string {
+func GenerateID() string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, 8)
 	for i := range b {
