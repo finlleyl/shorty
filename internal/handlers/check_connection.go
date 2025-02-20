@@ -5,8 +5,8 @@ import (
 	"net/http"
 )
 
-func CheckConnectionHandler(w http.ResponseWriter, r *http.Request) {
-	if err := db.PingDB; err != nil {
+func CheckConnectionHandler(w http.ResponseWriter, _ *http.Request) {
+	if err := db.PingDB(); err != nil {
 		http.Error(w, "Database is not reachable", http.StatusInternalServerError)
 		return
 	}

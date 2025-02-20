@@ -19,9 +19,9 @@ func InitDB(con *config.Config) {
 	}
 }
 
-func PingDB(ctx context.Context) error {
+func PingDB() error {
 
-	err := DB.Ping(ctx)
+	err := DB.Ping(context.Background())
 	if err != nil {
 		return fmt.Errorf("database is not reachable: %w", err)
 	}
