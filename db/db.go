@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/finlleyl/shorty/internal/config"
-	_ "github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 var DB *sql.DB
