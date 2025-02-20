@@ -19,9 +19,14 @@ type BaseURLConfig struct {
 	BaseURL string
 }
 
+type DatabaseConfig struct {
+	Address string
+}
+
 type Config struct {
 	A AddressConfig
 	B BaseURLConfig
+	D DatabaseConfig
 }
 
 func (c *AddressConfig) String() string {
@@ -52,14 +57,20 @@ func ParseFlags() *Config {
 	}
 
 	baseURLCfg := &BaseURLConfig{}
+	databaseCfg := &DatabaseConfig{}
 
 	flag.Var(addressCfg, "a", "host:port (default: localhost:8080)")
 	flag.StringVar(&baseURLCfg.BaseURL, "b", "http://localhost:8080", "base URL")
+	flag.StringVar(&databaseCfg.Address,
+		"d",
+		"postgresql://postgres:finleyl@localhost:5432/postgres",
+		"database address")
 	flag.Parse()
 
 	config := &Config{
 		A: *addressCfg,
 		B: *baseURLCfg,
+		D: *databaseCfg,
 	}
 
 	if address, exists := os.LookupEnv("SERVER_ADDRESS"); exists {
@@ -70,6 +81,10 @@ func ParseFlags() *Config {
 
 	if baseURL, exists := os.LookupEnv("BASE_URL"); exists {
 		config.B.BaseURL = baseURL
+	}
+
+	if database, exists := os.LookupEnv("DATABASE_DSN "); exists {
+		config.D.Address = database
 	}
 
 	return config
