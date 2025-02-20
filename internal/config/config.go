@@ -19,9 +19,9 @@ type BaseURLConfig struct {
 	BaseURL string
 }
 
-
 type DatabaseConfig struct {
 	Address string
+}
 
 type FileStorageConfig struct {
 	Path string
@@ -32,7 +32,6 @@ type Config struct {
 	B BaseURLConfig
 	D DatabaseConfig
 	F FileStorageConfig
-
 }
 
 func (c *AddressConfig) String() string {
@@ -95,6 +94,9 @@ func ParseFlags() *Config {
 
 	if database, exists := os.LookupEnv("DATABASE_DSN "); exists {
 		config.D.Address = database
+
+	}
+
 	if fileStoragePath, exists := os.LookupEnv("FILE_STORAGE_PATH"); exists {
 		config.F.Path = fileStoragePath
 	}
