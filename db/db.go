@@ -2,18 +2,19 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/finlleyl/shorty/internal/config"
-	"github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5"
 )
 
-var DB *pgx.Conn
+var DB *sql.DB
 
 func InitDB(con *config.Config) {
 	databaseURL := con.D.Address
 
 	var err error
-	DB, err = pgx.Connect(context.Background(), databaseURL)
+	DB, err = sql.Open("pgx", databaseURL)
 	if err != nil {
 		panic(err)
 	}
@@ -21,7 +22,7 @@ func InitDB(con *config.Config) {
 
 func PingDB() error {
 
-	err := DB.Ping(context.Background())
+	err := DB.PingContext(context.Background())
 	if err != nil {
 		return fmt.Errorf("database is not reachable: %w", err)
 	}
@@ -29,5 +30,5 @@ func PingDB() error {
 }
 
 func CloseDB() {
-	DB.Close(context.Background())
+	DB.Close()
 }
