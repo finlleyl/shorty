@@ -19,6 +19,10 @@ type BaseURLConfig struct {
 	BaseURL string
 }
 
+type DatabaseConfig struct {
+	Address string
+}
+
 type FileStorageConfig struct {
 	Path string
 }
@@ -26,6 +30,7 @@ type FileStorageConfig struct {
 type Config struct {
 	A AddressConfig
 	B BaseURLConfig
+	D DatabaseConfig
 	F FileStorageConfig
 }
 
@@ -57,16 +62,23 @@ func ParseFlags() *Config {
 	}
 
 	baseURLCfg := &BaseURLConfig{}
-	fileStorageCfg := &FileStorageConfig{}
+	databaseCfg := &DatabaseConfig{}
 
 	flag.Var(addressCfg, "a", "host:port (default: localhost:8080)")
 	flag.StringVar(&baseURLCfg.BaseURL, "b", "http://localhost:8080", "base URL")
+	flag.StringVar(&databaseCfg.Address,
+		"d",
+		"",
+		"database address")
+	fileStorageCfg := &FileStorageConfig{}
+
 	flag.StringVar(&fileStorageCfg.Path, "f", "/tmp/short-url-db.json", "file storage path")
 	flag.Parse()
 
 	config := &Config{
 		A: *addressCfg,
 		B: *baseURLCfg,
+		D: *databaseCfg,
 		F: *fileStorageCfg,
 	}
 
@@ -78,6 +90,10 @@ func ParseFlags() *Config {
 
 	if baseURL, exists := os.LookupEnv("BASE_URL"); exists {
 		config.B.BaseURL = baseURL
+	}
+
+	if database, exists := os.LookupEnv("DATABASE_DSN"); exists {
+		config.D.Address = database
 	}
 
 	if fileStoragePath, exists := os.LookupEnv("FILE_STORAGE_PATH"); exists {

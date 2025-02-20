@@ -2,6 +2,7 @@ package main
 
 import (
 	"compress/gzip"
+	"github.com/finlleyl/shorty/db"
 	"github.com/finlleyl/shorty/internal/app"
 	"github.com/finlleyl/shorty/internal/config"
 	"github.com/finlleyl/shorty/internal/handlers"
@@ -15,6 +16,9 @@ func main() {
 	cfg := config.ParseFlags()
 	storage := app.NewStorage(cfg.F.Path)
 
+	db.InitDB(cfg)
+	defer db.CloseDB()
+
 	logInstance, err := logger.InitializeLogger()
 	if err != nil {
 		return
@@ -26,6 +30,7 @@ func main() {
 	r.Post("/", logger.WithLogging(gzipMiddleware(handlers.ShortenHandler(storage, cfg))))
 	r.Get("/{id}", logger.WithLogging(gzipMiddleware(handlers.RedirectHandler(storage))))
 	r.Post("/api/shorten", logger.WithLogging(gzipMiddleware(handlers.JSONHandler(storage, cfg))))
+	r.Get("/ping", logger.WithLogging(handlers.CheckConnectionHandler))
 
 	logger.Sugar.Infow("Server started", "address", cfg.A.Address)
 	if err := http.ListenAndServe(cfg.A.Address, r); err != nil {
