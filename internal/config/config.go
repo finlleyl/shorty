@@ -68,7 +68,7 @@ func ParseFlags() *Config {
 	flag.StringVar(&baseURLCfg.BaseURL, "b", "http://localhost:8080", "base URL")
 	flag.StringVar(&databaseCfg.Address,
 		"d",
-		"postgresql://postgres:finleyl@localhost:5432/postgres",
+		"",
 		"database address")
 	fileStorageCfg := &FileStorageConfig{}
 
@@ -94,7 +94,6 @@ func ParseFlags() *Config {
 
 	if database, exists := os.LookupEnv("DATABASE_DSN"); exists {
 		config.D.Address = database
-
 	}
 
 	if fileStoragePath, exists := os.LookupEnv("FILE_STORAGE_PATH"); exists {
