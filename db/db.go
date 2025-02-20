@@ -20,7 +20,9 @@ func InitDB(con *config.Config) {
 }
 
 func PingDB(ctx context.Context) error {
-	if err := DB.Ping(ctx); err != nil {
+
+	err := DB.Ping(ctx)
+	if err != nil {
 		return fmt.Errorf("database is not reachable: %w", err)
 	}
 	return nil
