@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/finlleyl/shorty/internal/app"
 	"net/http"
+	"strings"
 )
 
 type BatchRequest struct {
@@ -27,7 +29,13 @@ func BatchHandler(store app.Store) http.HandlerFunc {
 
 		for _, request := range requests {
 			id := app.GenerateID()
+			originalURL := request.OriginalUrl
+
+			if !strings.HasPrefix(originalURL, "http://") && !strings.HasPrefix(originalURL, "https://") {
+				originalURL = "http://" + originalURL
+			}
 			store.Save(id, request.OriginalUrl)
+			fmt.Println("Saved", id, "for", request.OriginalUrl)
 			response = append(response, map[string]string{"correlation_id": request.CorrelationId, "short_url": id})
 
 		}
