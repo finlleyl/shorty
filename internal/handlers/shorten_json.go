@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func JSONHandler(storage *app.Storage, config *config.Config) http.HandlerFunc {
+func JSONHandler(store app.Store, config *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req models.Request
 		dec := json.NewDecoder(r.Body)
@@ -18,7 +18,7 @@ func JSONHandler(storage *app.Storage, config *config.Config) http.HandlerFunc {
 		}
 
 		shortURL := app.GenerateID()
-		storage.Save(shortURL, req.URL)
+		store.Save(shortURL, req.URL)
 		if shortURL == "" {
 			http.Error(w, "could not save URL", http.StatusInternalServerError)
 			return
