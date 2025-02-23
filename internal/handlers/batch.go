@@ -3,15 +3,17 @@ package handlers
 import (
 	"encoding/json"
 	"github.com/finlleyl/shorty/internal/app"
+	"github.com/finlleyl/shorty/internal/config"
 	"net/http"
+	"strings"
 )
 
 type BatchRequest struct {
-	CorrelationId string `json:"correlation_id"`
-	OriginalUrl   string `json:"original_url"`
+	CorrelationID string `json:"correlation_id"`
+	OriginalURL   string `json:"original_url"`
 }
 
-func BatchHandler(store app.Store) http.HandlerFunc {
+func BatchHandler(store app.Store, config *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var requests []BatchRequest
 
@@ -27,8 +29,13 @@ func BatchHandler(store app.Store) http.HandlerFunc {
 
 		for _, request := range requests {
 			id := app.GenerateID()
-			store.Save(id, request.OriginalUrl)
-			response = append(response, map[string]string{"correlation_id": request.CorrelationId, "short_url": id})
+			originalURL := request.OriginalURL
+
+			if !strings.HasPrefix(originalURL, "http://") && !strings.HasPrefix(originalURL, "https://") {
+				originalURL = "http://" + originalURL
+			}
+			store.Save(id, originalURL)
+			response = append(response, map[string]string{"correlation_id": request.CorrelationID, "short_url": config.B.BaseURL + "/" + id})
 
 		}
 

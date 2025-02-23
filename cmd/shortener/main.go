@@ -36,7 +36,7 @@ func main() {
 	r.Get("/{id}", logger.WithLogging(gzipMiddleware(handlers.RedirectHandler(store))))
 	r.Post("/api/shorten", logger.WithLogging(gzipMiddleware(handlers.JSONHandler(store, cfg))))
 	r.Get("/ping", logger.WithLogging(handlers.CheckConnectionHandler))
-	r.Post("/api/shorten/batch", logger.WithLogging(gzipMiddleware(handlers.BatchHandler(store))))
+	r.Post("/api/shorten/batch", logger.WithLogging(gzipMiddleware(handlers.BatchHandler(store, cfg))))
 
 	logger.Sugar.Infow("Server started", "address", cfg.A.Address)
 	if err := http.ListenAndServe(cfg.A.Address, r); err != nil {
