@@ -54,5 +54,11 @@ func (p *PostgresStore) GetAll() []app.ShortResult {
 		}
 		results = append(results, r)
 	}
+
+	if err := rows.Err(); err != nil {
+		fmt.Println("Error iterating rows:", err)
+		return nil
+	}
+
 	return results
 }
