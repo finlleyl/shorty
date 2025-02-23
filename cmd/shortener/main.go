@@ -14,22 +14,29 @@ import (
 
 func main() {
 	cfg := config.ParseFlags()
-	storage := app.NewStorage(cfg.F.Path)
 
-	db.InitDB(cfg)
-	defer db.CloseDB()
+	var store app.Store
+
+	if cfg.D.Address != "" {
+		db.InitDB(cfg)
+		store = db.NewPostgresStore(db.DB)
+	} else {
+		storage := app.NewStorage(cfg.F.Path)
+		store = storage
+	}
 
 	logInstance, err := logger.InitializeLogger()
 	if err != nil {
 		return
 	}
+
 	defer logInstance.Sync()
 
 	r := chi.NewRouter()
 
-	r.Post("/", logger.WithLogging(gzipMiddleware(handlers.ShortenHandler(storage, cfg))))
-	r.Get("/{id}", logger.WithLogging(gzipMiddleware(handlers.RedirectHandler(storage))))
-	r.Post("/api/shorten", logger.WithLogging(gzipMiddleware(handlers.JSONHandler(storage, cfg))))
+	r.Post("/", logger.WithLogging(gzipMiddleware(handlers.ShortenHandler(store, cfg))))
+	r.Get("/{id}", logger.WithLogging(gzipMiddleware(handlers.RedirectHandler(store))))
+	r.Post("/api/shorten", logger.WithLogging(gzipMiddleware(handlers.JSONHandler(store, cfg))))
 	r.Get("/ping", logger.WithLogging(handlers.CheckConnectionHandler))
 
 	logger.Sugar.Infow("Server started", "address", cfg.A.Address)

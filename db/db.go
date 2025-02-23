@@ -10,7 +10,7 @@ import (
 
 var DB *sql.DB
 
-func InitDB(con *config.Config) {
+func InitDB(con *config.Config) error {
 	databaseURL := con.D.Address
 
 	var err error
@@ -18,6 +18,18 @@ func InitDB(con *config.Config) {
 	if err != nil {
 		panic(err)
 	}
+
+	query := `
+CREATE TABLE IF NOT EXISTS urls (
+    id SERIAL PRIMARY KEY,
+	short_url TEXT UNIQUE NOT NULL,
+	original_url TEXT NOT NULL
+);`
+	_, err = DB.Exec(query)
+	if err != nil {
+		return fmt.Errorf("error creating table: %w", err)
+	}
+	return nil
 }
 
 func PingDB() error {

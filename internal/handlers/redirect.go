@@ -6,11 +6,11 @@ import (
 	"net/http"
 )
 
-func RedirectHandler(storage *app.Storage) http.HandlerFunc {
+func RedirectHandler(store app.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
 
-		origURL, exists := storage.Get(id)
+		origURL, exists := store.Get(id)
 		if !exists {
 			http.Error(w, "URL not found", http.StatusNotFound)
 			return
