@@ -2,8 +2,12 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/finlleyl/shorty/internal/app"
+	"github.com/finlleyl/shorty/internal/apperrors"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type PostgresStore struct {
@@ -14,16 +18,31 @@ func NewPostgresStore(db *sql.DB) *PostgresStore {
 	return &PostgresStore{db: db}
 }
 
-func (p *PostgresStore) Save(shortURL, originalURL string) int {
+func (p *PostgresStore) Save(shortURL, originalURL string) (int, error) {
 	var id int
 	err := p.db.QueryRow(
 		"INSERT INTO urls (short_url, original_url) VALUES ($1, $2) RETURNING id", shortURL, originalURL).Scan(&id)
+
 	if err != nil {
-		fmt.Println("Error inserting URL:", err)
-		return 0
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			var existingShortURL string
+			queryErr := p.db.QueryRow(
+				"SELECT short_url FROM urls WHERE original_url = $1",
+				originalURL,
+			).Scan(&existingShortURL)
+
+			if queryErr != nil {
+				return 0, queryErr
+			}
+
+			return 0, apperrors.NewConflictError(existingShortURL)
+		}
+
+		return 0, err
 	}
 
-	return id
+	return id, nil
 }
 
 func (p *PostgresStore) Get(id string) (string, bool) {

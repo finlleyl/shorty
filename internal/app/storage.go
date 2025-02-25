@@ -22,12 +22,15 @@ func NewStorage(file string) *Storage {
 	return s
 }
 
-func (s *Storage) Save(shortURL, originalURL string) int {
+func (s *Storage) Save(shortURL, originalURL string) (int, error) {
 	newID := 1
 	if len(s.data) > 0 {
 		newID = s.data[len(s.data)-1].ID + 1
 	}
 
+	//if existedShortURL, ok := s.GetFromOrigURL(originalURL); ok {
+	//	return 0, apperrors.NewConflictError(existedShortURL)
+	//}
 	s.data = append(s.data, ShortResult{
 		ID:          newID,
 		ShortURL:    shortURL,
@@ -35,7 +38,7 @@ func (s *Storage) Save(shortURL, originalURL string) int {
 	})
 
 	s.Flush()
-	return newID
+	return newID, nil
 }
 
 func (s *Storage) GetAll() []ShortResult {
@@ -70,5 +73,15 @@ func (s *Storage) Get(id string) (string, bool) {
 			return v.OriginalURL, true
 		}
 	}
+	return "", false
+}
+
+func (s *Storage) GetFromOrigURL(url string) (string, bool) {
+	for _, v := range s.data {
+		if v.OriginalURL == url {
+			return v.ShortURL, true
+		}
+	}
+
 	return "", false
 }

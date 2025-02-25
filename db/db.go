@@ -23,7 +23,7 @@ func InitDB(con *config.Config) error {
 CREATE TABLE IF NOT EXISTS urls (
     id SERIAL PRIMARY KEY,
 	short_url TEXT UNIQUE NOT NULL,
-	original_url TEXT NOT NULL
+	original_url TEXT UNIQUE NOT NULL
 );`
 	_, err = DB.Exec(query)
 	if err != nil {
