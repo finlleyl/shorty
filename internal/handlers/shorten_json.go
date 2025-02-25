@@ -33,7 +33,7 @@ func JSONHandler(store app.Store, config *config.Config) http.HandlerFunc {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusConflict)
 				enc := json.NewEncoder(w)
-				if err := enc.Encode(conflictErr.ShortURL); err != nil {
+				if err := enc.Encode(config.B.BaseURL + "/" + conflictErr.ShortURL); err != nil {
 					return
 				}
 				return

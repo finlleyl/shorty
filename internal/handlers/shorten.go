@@ -34,7 +34,7 @@ func ShortenHandler(store app.Store, config *config.Config) http.HandlerFunc {
 
 			if errors.As(err, &conflictErr) {
 				w.WriteHeader(http.StatusConflict)
-				_, _ = w.Write([]byte(conflictErr.ShortURL))
+				_, _ = w.Write([]byte(config.B.BaseURL + "/" + conflictErr.ShortURL))
 				return
 			}
 			http.Error(w, "Could not save URL", http.StatusInternalServerError)
