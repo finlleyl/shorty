@@ -33,11 +33,15 @@ func JSONHandler(store app.Store, config *config.Config) http.HandlerFunc {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusConflict)
 				enc := json.NewEncoder(w)
-				if err := enc.Encode(config.B.BaseURL + "/" + conflictErr.ShortURL); err != nil {
+				resp := models.Response{
+					Result: config.B.BaseURL + "/" + conflictErr.ShortURL,
+				}
+				if err := enc.Encode(resp); err != nil {
 					return
 				}
 				return
 			}
+
 			http.Error(w, "Could not save URL", http.StatusInternalServerError)
 			return
 		}
