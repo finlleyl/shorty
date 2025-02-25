@@ -2,8 +2,10 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/finlleyl/shorty/internal/app"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type PostgresStore struct {
@@ -14,16 +16,21 @@ func NewPostgresStore(db *sql.DB) *PostgresStore {
 	return &PostgresStore{db: db}
 }
 
-func (p *PostgresStore) Save(shortURL, originalURL string) int {
+func (p *PostgresStore) Save(shortURL, originalURL string) (int, error) {
 	var id int
 	err := p.db.QueryRow(
 		"INSERT INTO urls (short_url, original_url) VALUES ($1, $2) RETURNING id", shortURL, originalURL).Scan(&id)
+
 	if err != nil {
-		fmt.Println("Error inserting URL:", err)
-		return 0
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "2305" {
+			return 0, fmt.Errorf("failed to insert url: %w", err)
+		}
+
+		return 0, err
 	}
 
-	return id
+	return id, nil
 }
 
 func (p *PostgresStore) Get(id string) (string, bool) {
