@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"github.com/finlleyl/shorty/internal/apperrors"
 	"os"
 )
 
@@ -29,9 +28,9 @@ func (s *Storage) Save(shortURL, originalURL string) (int, error) {
 		newID = s.data[len(s.data)-1].ID + 1
 	}
 
-	if existedShortURL, ok := s.GetFromOrigURL(originalURL); ok {
-		return 0, apperrors.NewConflictError(existedShortURL)
-	}
+	//if existedShortURL, ok := s.GetFromOrigURL(originalURL); ok {
+	//	return 0, apperrors.NewConflictError(existedShortURL)
+	//}
 	s.data = append(s.data, ShortResult{
 		ID:          newID,
 		ShortURL:    shortURL,
