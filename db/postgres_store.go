@@ -8,6 +8,8 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
+var ErrConflict = errors.New("conflict: url already exists")
+
 type PostgresStore struct {
 	db *sql.DB
 }
@@ -24,7 +26,7 @@ func (p *PostgresStore) Save(shortURL, originalURL string) (int, error) {
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "2305" {
-			return 0, fmt.Errorf("failed to insert url: %w", err)
+			return 0, ErrConflict
 		}
 
 		return 0, err

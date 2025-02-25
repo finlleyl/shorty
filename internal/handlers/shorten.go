@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"errors"
+	"github.com/finlleyl/shorty/db"
 	"github.com/finlleyl/shorty/internal/app"
 	"github.com/finlleyl/shorty/internal/config"
 	"io"
@@ -25,7 +27,17 @@ func ShortenHandler(store app.Store, config *config.Config) http.HandlerFunc {
 		id := app.GenerateID()
 		shortURL := config.B.BaseURL + "/" + id
 
-		store.Save(id, longURL)
+		_, err = store.Save(id, longURL)
+
+		if err != nil {
+			if errors.Is(err, db.ErrConflict) {
+				http.Error(w, "URL already exists", http.StatusConflict)
+			}
+
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+
+			return
+		}
 
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusCreated)
