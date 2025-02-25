@@ -30,12 +30,14 @@ func ShortenHandler(store app.Store, config *config.Config) http.HandlerFunc {
 		_, err = store.Save(id, longURL)
 
 		if err != nil {
-			if errors.Is(err, apperrors.ErrConflict) {
-				http.Error(w, "URL already exists", http.StatusConflict)
+			var conflictErr *apperrors.ConflictError
+
+			if errors.As(err, &conflictErr) {
+				w.WriteHeader(http.StatusConflict)
+				_, _ = w.Write([]byte(conflictErr.ShortURL))
+				return
 			}
-
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-
+			http.Error(w, "Could not save URL", http.StatusInternalServerError)
 			return
 		}
 

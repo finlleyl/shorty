@@ -27,13 +27,18 @@ func JSONHandler(store app.Store, config *config.Config) http.HandlerFunc {
 
 		_, err := store.Save(shortURL, req.URL)
 		if err != nil {
-			if errors.Is(err, apperrors.ErrConflict) {
-				http.Error(w, "URL already exists", http.StatusConflict)
+			var conflictErr *apperrors.ConflictError
+
+			if errors.As(err, &conflictErr) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusConflict)
+				enc := json.NewEncoder(w)
+				if err := enc.Encode(conflictErr.ShortURL); err != nil {
+					return
+				}
 				return
 			}
-
-			http.Error(w, "could not save URL", http.StatusInternalServerError)
-
+			http.Error(w, "Could not save URL", http.StatusInternalServerError)
 			return
 		}
 

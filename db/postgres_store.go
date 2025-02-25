@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/finlleyl/shorty/internal/app"
 	"github.com/finlleyl/shorty/internal/apperrors"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -24,8 +25,18 @@ func (p *PostgresStore) Save(shortURL, originalURL string) (int, error) {
 
 	if err != nil {
 		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "2305" {
-			return 0, apperrors.ErrConflict
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			var existingShortURL string
+			queryErr := p.db.QueryRow(
+				"SELECT short_url FROM urls WHERE original_url = $1",
+				originalURL,
+			).Scan(&existingShortURL)
+
+			if queryErr != nil {
+				return 0, queryErr
+			}
+
+			return 0, apperrors.NewConflictError(existingShortURL)
 		}
 
 		return 0, err
