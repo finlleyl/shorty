@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"errors"
-	"github.com/finlleyl/shorty/db"
 	"github.com/finlleyl/shorty/internal/app"
+	"github.com/finlleyl/shorty/internal/apperrors"
 	"github.com/finlleyl/shorty/internal/config"
 	"io"
 	"net/http"
@@ -30,7 +30,7 @@ func ShortenHandler(store app.Store, config *config.Config) http.HandlerFunc {
 		_, err = store.Save(id, longURL)
 
 		if err != nil {
-			if errors.Is(err, db.ErrConflict) {
+			if errors.Is(err, apperrors.ErrConflict) {
 				http.Error(w, "URL already exists", http.StatusConflict)
 			}
 

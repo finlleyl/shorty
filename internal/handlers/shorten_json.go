@@ -3,8 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"github.com/finlleyl/shorty/db"
 	"github.com/finlleyl/shorty/internal/app"
+	"github.com/finlleyl/shorty/internal/apperrors"
 	"github.com/finlleyl/shorty/internal/config"
 	"github.com/finlleyl/shorty/internal/models"
 	"net/http"
@@ -27,7 +27,7 @@ func JSONHandler(store app.Store, config *config.Config) http.HandlerFunc {
 
 		_, err := store.Save(shortURL, req.URL)
 		if err != nil {
-			if errors.Is(err, db.ErrConflict) {
+			if errors.Is(err, apperrors.ErrConflict) {
 				http.Error(w, "URL already exists", http.StatusConflict)
 				return
 			}

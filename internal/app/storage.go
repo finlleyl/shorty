@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"github.com/finlleyl/shorty/internal/apperrors"
 	"os"
 )
 
@@ -22,12 +23,15 @@ func NewStorage(file string) *Storage {
 	return s
 }
 
-func (s *Storage) Save(shortURL, originalURL string) int {
+func (s *Storage) Save(shortURL, originalURL string) (int, error) {
 	newID := 1
 	if len(s.data) > 0 {
 		newID = s.data[len(s.data)-1].ID + 1
 	}
 
+	if _, ok := s.Get(shortURL); ok {
+		return 0, apperrors.ErrConflict
+	}
 	s.data = append(s.data, ShortResult{
 		ID:          newID,
 		ShortURL:    shortURL,
@@ -35,7 +39,7 @@ func (s *Storage) Save(shortURL, originalURL string) int {
 	})
 
 	s.Flush()
-	return newID
+	return newID, nil
 }
 
 func (s *Storage) GetAll() []ShortResult {
