@@ -9,6 +9,7 @@ type ShortResult struct {
 	ID          int    `json:"uuid"`
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
+	UserID      string `json:"user_id"`
 }
 
 type Storage struct {
@@ -22,19 +23,17 @@ func NewStorage(file string) *Storage {
 	return s
 }
 
-func (s *Storage) Save(shortURL, originalURL string) (int, error) {
+func (s *Storage) Save(shortURL, originalURL, userID string) (int, error) {
 	newID := 1
 	if len(s.data) > 0 {
 		newID = s.data[len(s.data)-1].ID + 1
 	}
 
-	//if existedShortURL, ok := s.GetFromOrigURL(originalURL); ok {
-	//	return 0, apperrors.NewConflictError(existedShortURL)
-	//}
 	s.data = append(s.data, ShortResult{
 		ID:          newID,
 		ShortURL:    shortURL,
 		OriginalURL: originalURL,
+		UserID:      userID,
 	})
 
 	s.Flush()
@@ -84,4 +83,18 @@ func (s *Storage) GetFromOrigURL(url string) (string, bool) {
 	}
 
 	return "", false
+}
+
+func (s *Storage) GetByUserID(userID string) ([]ShortResult, error) {
+	var results []ShortResult
+	for _, v := range s.data {
+		if v.UserID == userID {
+			results = append(results, v)
+		}
+	}
+	if len(results) == 0 {
+		return nil, nil
+	}
+
+	return results, nil
 }

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/finlleyl/shorty/internal/app"
+	"github.com/finlleyl/shorty/internal/auth"
 	"github.com/finlleyl/shorty/internal/config"
 	"github.com/go-chi/chi/v5"
 	"io"
@@ -61,7 +62,7 @@ func TestShortenHandler(t *testing.T) {
 			}
 
 			r := chi.NewRouter()
-			r.Post("/", ShortenHandler(storage, cfg))
+			r.Post("/", auth.AutoAuthMiddleware(ShortenHandler(storage, cfg)))
 
 			req := httptest.NewRequest(tt.method, "/", strings.NewReader(tt.requestURL))
 			req.Header.Set("Content-Type", "text/plain")

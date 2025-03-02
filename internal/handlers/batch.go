@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"github.com/finlleyl/shorty/internal/app"
+	"github.com/finlleyl/shorty/internal/auth"
 	"github.com/finlleyl/shorty/internal/config"
 	"net/http"
 	"strings"
@@ -34,7 +35,13 @@ func BatchHandler(store app.Store, config *config.Config) http.HandlerFunc {
 			if !strings.HasPrefix(originalURL, "http://") && !strings.HasPrefix(originalURL, "https://") {
 				originalURL = "http://" + originalURL
 			}
-			store.Save(id, originalURL)
+
+			userID, ok := auth.GetUserIDFromContext(r)
+			if !ok {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			store.Save(id, originalURL, userID)
 			response = append(response, map[string]string{"correlation_id": request.CorrelationID, "short_url": config.B.BaseURL + "/" + id})
 
 		}

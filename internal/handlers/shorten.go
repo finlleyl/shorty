@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/finlleyl/shorty/internal/app"
 	"github.com/finlleyl/shorty/internal/apperrors"
+	"github.com/finlleyl/shorty/internal/auth"
 	"github.com/finlleyl/shorty/internal/config"
 	"io"
 	"net/http"
@@ -26,8 +27,13 @@ func ShortenHandler(store app.Store, config *config.Config) http.HandlerFunc {
 
 		id := app.GenerateID()
 		shortURL := config.B.BaseURL + "/" + id
+		userID, ok := auth.GetUserIDFromContext(r)
+		if !ok {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
 
-		_, err = store.Save(id, longURL)
+		_, err = store.Save(id, longURL, userID)
 
 		if err != nil {
 			var conflictErr *apperrors.ConflictError
