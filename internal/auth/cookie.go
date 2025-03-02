@@ -12,7 +12,8 @@ const userIDKey = contextKey("userID")
 
 func AutoAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tokenString, err := GetTokenFromCookie(r)
+		tokenString := GetTokenFromCookie(r)
+
 		userID, err := GetUserID(tokenString)
 		if err != nil || userID == "" {
 			newToken, err := BuildJWTString()
@@ -38,34 +39,34 @@ func AutoAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func StrictAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		tokenString, err := GetTokenFromCookie(r)
-		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		userID, err := GetUserID(tokenString)
-		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		if userID == "" {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		ctx := context.WithValue(r.Context(), userIDKey, userID)
-		next(w, r.WithContext(ctx))
-	}
-}
+//func StrictAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+//	return func(w http.ResponseWriter, r *http.Request) {
+//		tokenString, err := GetTokenFromCookie(r)
+//		if err != nil {
+//			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+//			return
+//		}
+//		userID, err := GetUserID(tokenString)
+//		if err != nil {
+//			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+//			return
+//		}
+//		if userID == "" {
+//			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+//			return
+//		}
+//		ctx := context.WithValue(r.Context(), userIDKey, userID)
+//		next(w, r.WithContext(ctx))
+//	}
+//}
 
-func GetTokenFromCookie(r *http.Request) (string, error) {
+func GetTokenFromCookie(r *http.Request) string {
 	cookie, err := r.Cookie("jwt")
 	if err != nil {
-		return "", err
+		return ""
 	}
 
-	return cookie.Value, nil
+	return cookie.Value
 }
 
 func GetUserIDFromContext(r *http.Request) (string, bool) {

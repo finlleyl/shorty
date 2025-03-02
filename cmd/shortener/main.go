@@ -80,8 +80,8 @@ func main() {
 	r.Get("/api/user/urls",
 		logger.WithLogging(
 			gzipMiddleware(
-				auth.StrictAuthMiddleware(
-					handlers.UserURLsHandler(store),
+				auth.AutoAuthMiddleware(
+					handlers.UserURLsHandler(store, cfg),
 				),
 			),
 		),
