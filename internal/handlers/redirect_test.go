@@ -23,7 +23,7 @@ func TestRedirectHandler(t *testing.T) {
 			storageSetup: func() (*app.Storage, string) {
 				storage := app.NewStorage("/tmp/short-url-db.json")
 				id := app.GenerateID()
-				storage.Save(id, "google.com")
+				storage.Save(id, "google.com", "")
 				return storage, id
 			},
 			requestPath:    "",
@@ -35,7 +35,7 @@ func TestRedirectHandler(t *testing.T) {
 			storageSetup: func() (*app.Storage, string) {
 				storage := app.NewStorage("/tmp/short-url-db.json")
 				id := app.GenerateID()
-				storage.Save(id, "google.com")
+				storage.Save(id, "google.com", "")
 				return storage, id
 			},
 			requestPath:    "/123",
