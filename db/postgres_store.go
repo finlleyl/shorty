@@ -18,10 +18,10 @@ func NewPostgresStore(db *sql.DB) *PostgresStore {
 	return &PostgresStore{db: db}
 }
 
-func (p *PostgresStore) Save(shortURL, originalURL string) (int, error) {
+func (p *PostgresStore) Save(shortURL, originalURL, userID string) (int, error) {
 	var id int
 	err := p.db.QueryRow(
-		"INSERT INTO urls (short_url, original_url) VALUES ($1, $2) RETURNING id", shortURL, originalURL).Scan(&id)
+		"INSERT INTO urls (short_url, original_url, user_id) VALUES ($1, $2, $3) RETURNING id", shortURL, originalURL, userID).Scan(&id)
 
 	if err != nil {
 		var pgErr *pgconn.PgError
@@ -58,7 +58,7 @@ func (p *PostgresStore) Get(id string) (string, bool) {
 }
 
 func (p *PostgresStore) GetAll() []app.ShortResult {
-	rows, err := p.db.Query("SELECT id, short_url, original_url FROM urls")
+	rows, err := p.db.Query("SELECT id, short_url, original_url, user_id FROM urls")
 	if err != nil {
 		fmt.Println("Error fetching URLs:", err)
 		return nil
@@ -68,7 +68,7 @@ func (p *PostgresStore) GetAll() []app.ShortResult {
 	var results []app.ShortResult
 	for rows.Next() {
 		var r app.ShortResult
-		if err := rows.Scan(&r.ID, &r.ShortURL, &r.OriginalURL); err != nil {
+		if err := rows.Scan(&r.ID, &r.ShortURL, &r.OriginalURL, &r.UserID); err != nil {
 			continue
 		}
 		results = append(results, r)
@@ -80,4 +80,29 @@ func (p *PostgresStore) GetAll() []app.ShortResult {
 	}
 
 	return results
+}
+
+func (p *PostgresStore) GetByUserID(userID string) ([]app.ShortResult, error) {
+
+	rows, err := p.db.Query("SELECT id, short_url, original_url, user_id FROM urls WHERE user_id = $1", userID)
+	if err != nil {
+		fmt.Println("Error fetching URLs:", err)
+		return nil, err
+	}
+	defer rows.Close()
+	var results []app.ShortResult
+	for rows.Next() {
+		var r app.ShortResult
+		if err := rows.Scan(&r.ID, &r.ShortURL, &r.OriginalURL, &r.UserID); err != nil {
+			continue
+		}
+		results = append(results, r)
+	}
+
+	if err := rows.Err(); err != nil {
+		fmt.Println("Error iterating rows:", err)
+		return nil, err
+	}
+
+	return results, nil
 }

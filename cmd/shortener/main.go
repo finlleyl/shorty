@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/finlleyl/shorty/db"
 	"github.com/finlleyl/shorty/internal/app"
+	"github.com/finlleyl/shorty/internal/auth"
 	"github.com/finlleyl/shorty/internal/config"
 	"github.com/finlleyl/shorty/internal/handlers"
 	"github.com/finlleyl/shorty/internal/logger"
@@ -32,11 +33,59 @@ func main() {
 
 	r := chi.NewRouter()
 
-	r.Post("/", logger.WithLogging(gzipMiddleware(handlers.ShortenHandler(store, cfg))))
-	r.Get("/{id}", logger.WithLogging(gzipMiddleware(handlers.RedirectHandler(store))))
-	r.Post("/api/shorten", logger.WithLogging(gzipMiddleware(handlers.JSONHandler(store, cfg))))
-	r.Get("/ping", logger.WithLogging(handlers.CheckConnectionHandler))
-	r.Post("/api/shorten/batch", logger.WithLogging(gzipMiddleware(handlers.BatchHandler(store, cfg))))
+	r.Post("/",
+		logger.WithLogging(
+			gzipMiddleware(
+				auth.AutoAuthMiddleware(
+					handlers.ShortenHandler(store, cfg),
+				),
+			),
+		),
+	)
+
+	r.Get("/{id}",
+		logger.WithLogging(
+			gzipMiddleware(
+				handlers.RedirectHandler(store),
+			),
+		),
+	)
+
+	r.Post("/api/shorten",
+		logger.WithLogging(
+			gzipMiddleware(
+				auth.AutoAuthMiddleware(
+					handlers.JSONHandler(store, cfg),
+				),
+			),
+		),
+	)
+
+	r.Get("/ping",
+		logger.WithLogging(
+			handlers.CheckConnectionHandler,
+		),
+	)
+
+	r.Post("/api/shorten/batch",
+		logger.WithLogging(
+			gzipMiddleware(
+				auth.AutoAuthMiddleware(
+					handlers.BatchHandler(store, cfg),
+				),
+			),
+		),
+	)
+
+	r.Get("/api/user/urls",
+		logger.WithLogging(
+			gzipMiddleware(
+				auth.StrictAuthMiddleware(
+					handlers.UserURLsHandler(store),
+				),
+			),
+		),
+	)
 
 	logger.Sugar.Infow("Server started", "address", cfg.A.Address)
 	if err := http.ListenAndServe(cfg.A.Address, r); err != nil {

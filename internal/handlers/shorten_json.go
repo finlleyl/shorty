@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/finlleyl/shorty/internal/app"
 	"github.com/finlleyl/shorty/internal/apperrors"
+	"github.com/finlleyl/shorty/internal/auth"
 	"github.com/finlleyl/shorty/internal/config"
 	"github.com/finlleyl/shorty/internal/models"
 	"net/http"
@@ -25,7 +26,13 @@ func JSONHandler(store app.Store, config *config.Config) http.HandlerFunc {
 			return
 		}
 
-		_, err := store.Save(shortURL, req.URL)
+		userID, ok := auth.GetUserIDFromContext(r)
+		if !ok {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		_, err := store.Save(shortURL, req.URL, userID)
 		if err != nil {
 			var conflictErr *apperrors.ConflictError
 
