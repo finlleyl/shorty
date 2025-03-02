@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/finlleyl/shorty/internal/app"
+	"github.com/finlleyl/shorty/internal/auth"
 	"github.com/finlleyl/shorty/internal/config"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
@@ -25,7 +26,7 @@ func TestJSONHandler(t *testing.T) {
 			BaseURL: "http://localhost:8080/",
 		},
 	}
-	router.Post("/api/shorten", JSONHandler(storage, cfg))
+	router.Post("/api/shorten", auth.AutoAuthMiddleware(JSONHandler(storage, cfg)))
 
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodPost, "/api/shorten", strings.NewReader(`{"url":"http://google.com"}`))
