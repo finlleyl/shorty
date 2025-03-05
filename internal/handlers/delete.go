@@ -7,7 +7,50 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"sync"
+	"time"
 )
+
+var (
+	deleteTasksMu sync.Mutex
+	// Для каждого userID накапливаем множество short URL для удаления
+	deleteTasks = make(map[string]map[string]struct{})
+)
+
+func enqueueDeletion(userID string, urls []string) {
+	deleteTasksMu.Lock()
+	defer deleteTasksMu.Unlock()
+	if deleteTasks[userID] == nil {
+		deleteTasks[userID] = make(map[string]struct{})
+	}
+	for _, url := range urls {
+		deleteTasks[userID][url] = struct{}{}
+	}
+}
+
+func flushDeletions(store app.Store) {
+	ticker := time.NewTicker(50 * time.Millisecond)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		deleteTasksMu.Lock()
+		for userID, urlsSet := range deleteTasks {
+			var urls []string
+			for url := range urlsSet {
+				urls = append(urls, url)
+			}
+			if len(urls) > 0 {
+				if err := store.BatchDelete(urls, userID); err != nil {
+					log.Printf("Batch delete error for user %s: %v", userID, err)
+				} else {
+					log.Printf("Deleted URLs for user %s: %v", userID, urls)
+				}
+			}
+		}
+		deleteTasks = make(map[string]map[string]struct{})
+		deleteTasksMu.Unlock()
+	}
+}
 
 func DeleteHandler(store app.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -30,11 +73,9 @@ func DeleteHandler(store app.Store) http.HandlerFunc {
 			return
 		}
 
-		go func(urls []string, userID string) {
-			if err := store.BatchDelete(urls, userID); err != nil {
-				log.Printf("Batch deletion error: %v", err)
-			}
-		}(urls, userID)
+		go flushDeletions(store)
+
+		enqueueDeletion(userID, urls)
 
 		w.WriteHeader(http.StatusAccepted)
 	}
