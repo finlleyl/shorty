@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/lib/pq"
+	"sync"
 )
 
 type PostgresStore struct {
@@ -109,8 +110,33 @@ func (p *PostgresStore) GetByUserID(userID string) ([]app.ShortResult, error) {
 }
 
 func (p *PostgresStore) BatchDelete(urls []string, userID string) error {
-	query := `UPDATE urls SET deleted_flag = TRUE WHERE user_id = $1 AND short_url = ANY($2)`
+	const batchSize = 100
+	errs := make(chan error, len(urls)/batchSize+1)
+	var wg sync.WaitGroup
 
-	_, err := p.db.Exec(query, userID, pq.Array(urls))
-	return err
+	for start := 0; start < len(urls); start += batchSize {
+		end := start + batchSize
+		if end > len(urls) {
+			end = len(urls)
+		}
+		wg.Add(1)
+		go func(batch []string) {
+			defer wg.Done()
+			query := `UPDATE urls SET deleted_flag = TRUE WHERE user_id = $1 AND short_url = ANY($2)`
+			if _, err := p.db.Exec(query, userID, pq.Array(batch)); err != nil {
+				errs <- err
+			}
+		}(urls[start:end])
+	}
+
+	wg.Wait()
+	close(errs)
+
+	for err := range errs {
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
