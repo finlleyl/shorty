@@ -433,6 +433,7 @@ jobs:
           shortenertestbeta -test.v -test.run=^TestIteration15$ \
               -binary-path=cmd/shortener/shortener \
               -database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
+              -flush-interval=10ms
 
       - name: "Code increment #16"
         if: |
