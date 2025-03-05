@@ -5,4 +5,5 @@ type Store interface {
 	Get(id string) (string, bool)
 	GetAll() []ShortResult
 	GetByUserID(userID string) ([]ShortResult, error)
+	BatchDelete(urls []string, userID string) error
 }
