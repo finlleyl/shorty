@@ -12,6 +12,10 @@ func RedirectHandler(store app.Store) http.HandlerFunc {
 
 		origURL, exists := store.Get(id)
 		if !exists {
+			if origURL == "alpha" {
+				w.WriteHeader(http.StatusGone)
+				return
+			}
 			http.Error(w, "URL not found", http.StatusNotFound)
 			return
 		}

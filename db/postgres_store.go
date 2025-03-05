@@ -8,6 +8,7 @@ import (
 	"github.com/finlleyl/shorty/internal/apperrors"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/lib/pq"
 )
 
 type PostgresStore struct {
@@ -105,4 +106,11 @@ func (p *PostgresStore) GetByUserID(userID string) ([]app.ShortResult, error) {
 	}
 
 	return results, nil
+}
+
+func (p *PostgresStore) BatchDelete(urls []string, userID string) error {
+	query := `UPDATE urls SET deleted_flag = TRUE WHERE user_id = $1 AND short_url = ANY($2)`
+
+	_, err := p.db.Exec(query, userID, pq.Array(urls))
+	return err
 }

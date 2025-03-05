@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 )
 
@@ -10,6 +11,7 @@ type ShortResult struct {
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
 	UserID      string `json:"user_id"`
+	DeletedFlag bool   `json:"is_deleted"`
 }
 
 type Storage struct {
@@ -34,6 +36,7 @@ func (s *Storage) Save(shortURL, originalURL, userID string) (int, error) {
 		ShortURL:    shortURL,
 		OriginalURL: originalURL,
 		UserID:      userID,
+		DeletedFlag: false,
 	})
 
 	s.Flush()
@@ -68,8 +71,10 @@ func (s *Storage) Load() error {
 
 func (s *Storage) Get(id string) (string, bool) {
 	for _, v := range s.data {
-		if v.ShortURL == id {
+		if v.ShortURL == id && v.DeletedFlag == false {
 			return v.OriginalURL, true
+		} else if v.ShortURL == id && v.DeletedFlag == true {
+			return "alpha", false
 		}
 	}
 	return "", false
@@ -97,4 +102,24 @@ func (s *Storage) GetByUserID(userID string) ([]ShortResult, error) {
 	}
 
 	return results, nil
+}
+
+func (s *Storage) BatchDelete(urls []string, userID string) error {
+	var updated bool
+	for i, rec := range s.data {
+		if rec.UserID == userID {
+			for _, u := range urls {
+				if rec.ShortURL == u && !rec.DeletedFlag {
+					s.data[i].DeletedFlag = true
+					updated = true
+					break
+				}
+			}
+		}
+	}
+
+	if !updated {
+		return errors.New("no matching URLs found for deletion")
+	}
+	return s.Flush()
 }
