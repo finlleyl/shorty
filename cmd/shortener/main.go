@@ -87,6 +87,16 @@ func main() {
 		),
 	)
 
+	r.Delete("/api/user/urls",
+		logger.WithLogging(
+			gzipMiddleware(
+				auth.AutoAuthMiddleware(
+					handlers.DeleteHandler(store),
+				),
+			),
+		),
+	)
+
 	logger.Sugar.Infow("Server started", "address", cfg.A.Address)
 	if err := http.ListenAndServe(cfg.A.Address, r); err != nil {
 		logger.Sugar.Fatalw("Server failed", "error", err)
