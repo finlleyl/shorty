@@ -31,9 +31,6 @@ func main() {
 
 	defer logInstance.Sync()
 
-	deleteTaskCh := make(chan handlers.DeleteTask, 1000)
-	go handlers.BatchDeleteWorker(deleteTaskCh, store)
-
 	r := chi.NewRouter()
 
 	r.Post("/",
@@ -90,16 +87,11 @@ func main() {
 		),
 	)
 
-	deleteHandler := &handlers.DeleteHandler{
-		Store:        store,
-		DeleteTaskCh: deleteTaskCh,
-	}
-
 	r.Delete("/api/user/urls",
 		logger.WithLogging(
 			gzipMiddleware(
 				auth.AutoAuthMiddleware(
-					deleteHandler.ServeHTTP,
+					handlers.DeleteHandler(store),
 				),
 			),
 		),
