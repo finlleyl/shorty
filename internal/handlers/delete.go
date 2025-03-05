@@ -13,8 +13,7 @@ import (
 
 var (
 	deleteTasksMu sync.Mutex
-	// Для каждого userID накапливаем множество short URL для удаления
-	deleteTasks = make(map[string]map[string]struct{})
+	deleteTasks   = make(map[string]map[string]struct{})
 )
 
 func enqueueDeletion(userID string, urls []string) {
@@ -34,11 +33,18 @@ func flushDeletions(store app.Store) {
 
 	for range ticker.C {
 		deleteTasksMu.Lock()
+		tasksCopy := make(map[string][]string)
 		for userID, urlsSet := range deleteTasks {
 			var urls []string
 			for url := range urlsSet {
 				urls = append(urls, url)
 			}
+			tasksCopy[userID] = urls
+		}
+		deleteTasks = make(map[string]map[string]struct{})
+		deleteTasksMu.Unlock()
+
+		for userID, urls := range tasksCopy {
 			if len(urls) > 0 {
 				if err := store.BatchDelete(urls, userID); err != nil {
 					log.Printf("Batch delete error for user %s: %v", userID, err)
@@ -47,9 +53,11 @@ func flushDeletions(store app.Store) {
 				}
 			}
 		}
-		deleteTasks = make(map[string]map[string]struct{})
-		deleteTasksMu.Unlock()
 	}
+}
+
+func FlushDeletionsWorker(store app.Store) {
+	flushDeletions(store)
 }
 
 func DeleteHandler(store app.Store) http.HandlerFunc {
@@ -73,10 +81,7 @@ func DeleteHandler(store app.Store) http.HandlerFunc {
 			return
 		}
 
-		go flushDeletions(store)
-
 		enqueueDeletion(userID, urls)
-
 		w.WriteHeader(http.StatusAccepted)
 	}
 }

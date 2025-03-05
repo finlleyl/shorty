@@ -31,6 +31,8 @@ func main() {
 
 	defer logInstance.Sync()
 
+	go handlers.FlushDeletionsWorker(store)
+
 	r := chi.NewRouter()
 
 	r.Post("/",
