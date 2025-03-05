@@ -71,9 +71,9 @@ func (s *Storage) Load() error {
 
 func (s *Storage) Get(id string) (string, bool) {
 	for _, v := range s.data {
-		if v.ShortURL == id && v.DeletedFlag == false {
+		if v.ShortURL == id && !v.DeletedFlag {
 			return v.OriginalURL, true
-		} else if v.ShortURL == id && v.DeletedFlag == true {
+		} else if v.ShortURL == id && v.DeletedFlag {
 			return "alpha", false
 		}
 	}

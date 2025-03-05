@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"github.com/finlleyl/shorty/internal/app"
+	"github.com/finlleyl/shorty/internal/auth"
 	"io"
 	"log"
 	"net/http"
@@ -23,7 +24,7 @@ func DeleteHandler(store app.Store) http.HandlerFunc {
 			return
 		}
 
-		userID, ok := r.Context().Value("userID").(string)
+		userID, ok := auth.GetUserIDFromContext(r)
 		if !ok || userID == "" {
 			http.Error(w, "User not authenticated", http.StatusUnauthorized)
 			return
