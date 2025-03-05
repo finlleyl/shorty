@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func DeleteHandler(store *app.Store) http.HandlerFunc {
+func DeleteHandler(store app.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
