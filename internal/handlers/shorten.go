@@ -8,6 +8,7 @@ import (
 	"github.com/finlleyl/shorty/internal/config"
 	"io"
 	"net/http"
+	"strings"
 )
 
 func ShortenHandler(store app.Store, config *config.Config) http.HandlerFunc {
@@ -31,6 +32,10 @@ func ShortenHandler(store app.Store, config *config.Config) http.HandlerFunc {
 		if !ok {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
+		}
+
+		if !strings.HasPrefix(longURL, "http://") && !strings.HasPrefix(longURL, "https://") {
+			longURL = "http://" + longURL
 		}
 
 		_, err = store.Save(id, longURL, userID)

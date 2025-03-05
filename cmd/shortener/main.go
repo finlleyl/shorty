@@ -9,6 +9,7 @@ import (
 	"github.com/finlleyl/shorty/internal/logger"
 	"github.com/go-chi/chi/v5"
 	"net/http"
+	"time"
 )
 
 func main() {
@@ -82,6 +83,19 @@ func main() {
 			gzipMiddleware(
 				auth.AutoAuthMiddleware(
 					handlers.UserURLsHandler(store, cfg),
+				),
+			),
+		),
+	)
+
+	deleteTaskCh := make(chan handlers.DeleteTask, 10000)
+	go handlers.BatchDeleteWorker(store, deleteTaskCh, 50*time.Millisecond)
+
+	r.Delete("/api/user/urls",
+		logger.WithLogging(
+			gzipMiddleware(
+				auth.AutoAuthMiddleware(
+					handlers.DeleteHandler(store, deleteTaskCh),
 				),
 			),
 		),
